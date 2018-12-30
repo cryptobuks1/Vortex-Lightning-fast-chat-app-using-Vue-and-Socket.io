@@ -1,7 +1,7 @@
 {
   "name": "vortex",
   "version": "1.0.0",
-  "description": "Lightning fast chat",
+  "description": "Lightning fast Vue chat using Socket.io",
   "main": "index.js",
   "scripts": {
     "start": "node server/index.js",
