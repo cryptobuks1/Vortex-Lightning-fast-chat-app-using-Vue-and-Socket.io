@@ -9,24 +9,39 @@
         </v-flex>
         <v-flex md8 xs12>
           <div class="messagesBox">
-            <div id="messageElem"></div>
+            <p class="feedback" v-if="feedbackMessage">
+              {{ feedbackMessage }}
+            </p>
+            <div v-for="message in messages" class="message">
+              <strong>{{ message.username}}:</strong>
+              {{ message.contents }}
+            </div>
             <div id="feedback"></div>
           </div>
           <br>
         <div class="messageField">
           <v-layout row>
             <v-flex xs10>
-              <v-text-field
-            label="Solo"
-            id="messageField"
-            placeholder="Enter a message here..."
-            solo
-            flat
-            v-model="newMessage"
-          ></v-text-field>
+              <v-text-field label="Solo"
+                            id="messageField"
+                            placeholder="Enter a message here..."
+                            solo
+                            flat
+                            @keydown="emitTyping"
+                            @keydown.enter="sendMessage"
+                            v-model="newMessage">
+              </v-text-field>
             </v-flex>
             <v-flex xs2>
-              <v-btn v-on:click="sendMessage" depressed title="Send" icon color="blue-grey darken-1"><div style="color: white; padding-top: 4px;"><i class="material-icons">send</i></div></v-btn>
+              <v-btn @click="sendMessage"
+                     depressed
+                     title="Send"
+                     icon
+                     color="blue-grey darken-1">
+                <div style="color: white; padding-top: 4px;">
+                  <i class="material-icons">send</i>
+                </div>
+              </v-btn>
             </v-flex>
           </v-layout>
         </div>
@@ -54,7 +69,9 @@ export default {
   data() {
     return {
       username: sessionStorage.getItem('username'),
-      newMessage: ''
+      messages: [],
+      newMessage: '',
+      usersTyping: [],
     }
   },
   beforeCreate() {
@@ -66,36 +83,43 @@ export default {
   },
   created() {
     // establish connection to socket.io
-    socket.on('chat', function(data){
-      this.messages = data;
-      console.log(this.messages)
-      var output = document.getElementById('messageElem');
-      var feedback = document.getElementById('feedback');
-      var message = document.getElementById('messageField');
-      feedback.innerHTML = ""
-      output.innerHTML += '<div style="margin-bottom: 10px; background-color: #90A4AE; padding: 5px; border-radius: 10px; color: white;"><strong>'+data.username+': </strong> '+data.message+'</div>';
+    socket.on('chat', ({ contents, username }) => {
+      this.messages.push({ contents, username });
+      this.usersTyping.splice(this.usersTyping.indexOf(username), 1);
+    });
 
-      message.addEventListener('keypress', function() {
-        socket.emit('typing', sessionStorage.getItem('username'))
-      });
-      socket.on('typing', function(data){
-        feedback.innerHTML = '<p><em>'+data+' is typing a message... </em></p>';
-        console.log(data);
-      })
+    socket.on('typing', ({ username }) => {
+      if (!this.usersTyping.indexOf(username)) {
+        this.usersTyping.push(username);
+        setTimeout(() => {
+          this.usersTyping.splice(this.usersTyping.indexOf(username), 1);
+        }, 5000);
+      }
     })
+
+    socket.on('end_typing', ({ username }) => {
+    });
+  },
+  computed: {
+    feedbackMessage() {
+      const l = this.usersTyping.length;
+      return l > 0 ? `${l} user${l > 1 ? 's' : ''} typing in the chat` : false;
+    }
   },
   methods: {
     sendMessage() {
       if (this.newMessage === '') {
         // empty condition
-      }
-      else {
+      } else {
         socket.emit('chat', {
-        message: this.newMessage,
-        username: this.username
-      });
+          contents: this.newMessage,
+          username: this.username,
+        });
       }
       this.newMessage = ''
+    },
+    emitTyping() {
+      socket.emit('typing', { username: this.username });
     }
   },
 }
@@ -114,6 +138,13 @@ export default {
   overflow: scroll;
   padding: 10px;
   padding-right: 30%;
+}
+.message {
+  margin-bottom: 10px;
+  background-color: #90A4AE;
+  padding: 5px;
+  border-radius: 10px;
+  color: white;
 }
 
 </style>
