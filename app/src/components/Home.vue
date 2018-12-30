@@ -9,10 +9,7 @@
         </v-flex>
         <v-flex md8 xs12>
           <div class="messagesBox">
-            <p class="feedback" v-if="feedbackMessage">
-              {{ feedbackMessage }}
-            </p>
-            <div v-for="message in messages" class="message">
+            <div v-for="message in messages" class="message" v-bind:key="message._id">
               <strong>{{ message.username}}:</strong>
               {{ message.contents }}
             </div>
@@ -86,25 +83,16 @@ export default {
     socket.on('chat', ({ contents, username }) => {
       this.messages.push({ contents, username });
       this.usersTyping.splice(this.usersTyping.indexOf(username), 1);
+      var feedback = document.getElementById('feedback');
+      feedback.innerHTML = '';
     });
-
-    socket.on('typing', ({ username }) => {
-      if (!this.usersTyping.indexOf(username)) {
-        this.usersTyping.push(username);
-        setTimeout(() => {
-          this.usersTyping.splice(this.usersTyping.indexOf(username), 1);
-        }, 5000);
-      }
+    socket.on('typing', function(data){
+      var feedback = document.getElementById('feedback');
+      feedback.innerHTML = '<p>'+data+' is typing a message...'+'</p>';
     })
-
-    socket.on('end_typing', ({ username }) => {
-    });
   },
   computed: {
-    feedbackMessage() {
-      const l = this.usersTyping.length;
-      return l > 0 ? `${l} user${l > 1 ? 's' : ''} typing in the chat` : false;
-    }
+
   },
   methods: {
     sendMessage() {
@@ -114,12 +102,13 @@ export default {
         socket.emit('chat', {
           contents: this.newMessage,
           username: this.username,
+          _id: Math.random().toString(36).substring(7) // random id function
         });
       }
       this.newMessage = ''
     },
     emitTyping() {
-      socket.emit('typing', { username: this.username });
+      socket.emit('typing', sessionStorage.getItem('username'));
     }
   },
 }
@@ -146,5 +135,8 @@ export default {
   border-radius: 10px;
   color: white;
 }
-
+#feedback{
+  color: white;
+  font-size: 12px;
+}
 </style>
