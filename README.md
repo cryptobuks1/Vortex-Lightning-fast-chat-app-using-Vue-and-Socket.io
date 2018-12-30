@@ -4,7 +4,7 @@
 ```
 cd server && npm install
 
-cd vortex && npm install
+cd app && npm install
 ```
 
 ### Compiles and hot-reloads for development (front end)
