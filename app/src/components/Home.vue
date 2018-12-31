@@ -14,6 +14,9 @@
               {{ message.contents }}
             </div>
             <div id="feedback"></div>
+            <div v-if="messages.length == 0"> <!-- If empty box -->
+              <v-chip class="emptyBox" v-model="chip" close color="blue-grey darken-3" text-color="white">Looks like it's pretty empty here... <br>Type a message to begin.</v-chip>
+            </div>
           </div>
           <br>
         <div class="messageField">
@@ -69,6 +72,7 @@ export default {
       messages: [],
       newMessage: '',
       usersTyping: [],
+      chip: true
     }
   },
   beforeCreate() {
@@ -138,5 +142,9 @@ export default {
 #feedback{
   color: white;
   font-size: 12px;
+}
+.emptyBox{
+  padding-bottom: 5px;
+  padding-top: 5px;
 }
 </style>
