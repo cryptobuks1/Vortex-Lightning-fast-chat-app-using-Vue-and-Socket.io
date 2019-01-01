@@ -11,7 +11,8 @@
           <div class="messagesBox">
             <div v-for="message in messages" class="message" v-bind:key="message._id">
               <strong>{{ message.username}}:</strong>
-              {{ message.contents }}
+              <div>{{ message.contents }}</div>
+              <div style="text-align: right;"><strong>{{ message.time }}</strong></div>
             </div>
             <div id="feedback"></div>
             <div v-if="messages.length == 0"> <!-- If empty box -->
@@ -84,8 +85,8 @@ export default {
   },
   created() {
     // establish connection to socket.io
-    socket.on('chat', ({ contents, username }) => {
-      this.messages.push({ contents, username });
+    socket.on('chat', ({ contents, username, time, _id }) => {
+      this.messages.push({ contents, username, time, _id });
       this.usersTyping.splice(this.usersTyping.indexOf(username), 1);
       var feedback = document.getElementById('feedback');
       feedback.innerHTML = '';
@@ -93,7 +94,7 @@ export default {
     socket.on('typing', function(data){
       var feedback = document.getElementById('feedback');
       feedback.innerHTML = '<p>'+data+' is typing a message...'+'</p>';
-    })
+    });
   },
   computed: {
 
@@ -106,6 +107,7 @@ export default {
         socket.emit('chat', {
           contents: this.newMessage,
           username: this.username,
+          time: new Date().getHours()+':'+new Date().getMinutes(),
           _id: Math.random().toString(36).substring(7) // random id function
         });
       }
