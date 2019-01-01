@@ -101,13 +101,20 @@ export default {
   },
   methods: {
     sendMessage() {
+      // handle time format
+      function addZero(i) {
+        if (i < 10) {
+          i = "0" + i;
+        }
+        return i;
+      }
       if (this.newMessage === '') {
         // empty condition
       } else {
         socket.emit('chat', {
           contents: this.newMessage,
           username: this.username,
-          time: new Date().getHours()+':'+new Date().getMinutes(),
+          time: addZero(new Date().getHours())+':'+addZero(new Date().getMinutes()),
           _id: Math.random().toString(36).substring(7) // random id function
         });
       }
